@@ -18,4 +18,4 @@ class TokenService {
     }
 }
 
-moduel.exports = new TokenService();
+module.exports = new TokenService();
