@@ -19,6 +19,14 @@ class MailService {
             from: process.env.SMTP_USER,
             to: to,
             subject: 'Activation Mail' + process.env.API_URL,
+            text: '',
+            html:
+                `
+                    <div>
+                        <h1>Activation link</h1>
+                        <a href="${link}">${link}</a>
+                    </div>
+                `
         });
     }
 }
