@@ -1,7 +1,6 @@
 const nodemailer = require('nodemailer');
 
 class MailService {
-
     constructor() {
         this.transporter = nodemailer.createTransport({
             host: process.env.SMTP_HOST,
@@ -11,23 +10,28 @@ class MailService {
                 user: process.env.SMTP_USER,
                 pass: process.env.SMTP_PASSWORD,
             }
-        })
+        });
     }
 
     async sendActivationMail(to, link) {
-        await this.transporter.sendMail({
-            from: process.env.SMTP_USER,
-            to: to,
-            subject: 'Activation Mail' + process.env.API_URL,
-            text: '',
-            html:
-                `
+        try {
+            await this.transporter.sendMail({
+                from: `"Your App" <${process.env.SMTP_USER}>`,
+                to,
+                subject: `Account Activation - ${process.env.API_URL}`,
+                text: '',
+                html: `
                     <div>
-                        <h1>Activation link</h1>
+                        <h1>Activation Link</h1>
                         <a href="${link}">${link}</a>
                     </div>
                 `
-        });
+            });
+            console.log(`Activation email sent to ${to}`);
+        } catch (error) {
+            console.error('Error sending email:', error);
+            throw new Error(`Failed to send activation email: ${error.message}`);
+        }
     }
 }
 
