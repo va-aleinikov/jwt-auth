@@ -17,13 +17,14 @@ class UserService {
         const user = await UserModel.create({email, password: hashedPassword, activationLink});
         await mailService.sendActivationMail(email, `${process.env.API_URL}/api/activate/${activationLink}`);
 
-        const userDto = new UserDto(user); // id, email, isActivated
+        return await this.generateAuthData(user);
+    }
+    async generateAuthData(user) {
+        const userDto = new UserDto(user);
         const tokens = tokenService.generateTokens({...userDto});
         await tokenService.saveToken(userDto.id, tokens.refreshToken);
-
         return {...tokens, user: userDto};
     }
-
     async activate(activationLink) {
         const user = await UserModel.findOne({activationLink})
         if (!user) {
@@ -42,16 +43,28 @@ class UserService {
         if (!isPassMatch) {
             throw ApiError.BadRequest('wrong password');
         }
-        const userDto = new UserDto(user);
-        const tokens = tokenService.generateTokens({...userDto});
 
-        await tokenService.saveToken(userDto.id, tokens.refreshToken);
-        return {...tokens, user: userDto};
+        return await this.generateAuthData(user);
     }
 
     async logout(refreshToken) {
         const token = await tokenService.removeToken(refreshToken);
         return token;
+    }
+
+    async refreshToken(refreshToken) {
+        if (!refreshToken) {
+            throw ApiError.UnauthorizedError()
+        }
+        const userData = tokenService.validateRefreshToken(refreshToken);
+        const tokenFromDb = await tokenService.findToken(refreshToken);
+        if(!userData || !tokenFromDb) {
+            throw ApiError.UnauthorizedError()
+        }
+
+        const user = await UserModel.findById(userData.id);
+
+        return await this.generateAuthData(user);
     }
 }
 
