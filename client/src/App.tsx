@@ -1,9 +1,9 @@
 import React from 'react';
-
+import LoginForm from './components/LoginForm';
 function App() {
   return (
     <div>
-        1233
+        <LoginForm></LoginForm>
     </div>
   );
 }
